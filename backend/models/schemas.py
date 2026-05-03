@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, field_validator, model_config
+from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class ResearchRequest(BaseModel):
@@ -37,7 +37,7 @@ class ReportSectionsSchema(BaseModel):
 
 
 class ReportSummary(BaseModel):
-    model_config = model_config(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     company_name: str
@@ -45,7 +45,7 @@ class ReportSummary(BaseModel):
 
 
 class ReportDetailResponse(BaseModel):
-    model_config = model_config(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     company_name: str

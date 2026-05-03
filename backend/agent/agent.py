@@ -20,7 +20,10 @@ async def _gather_search_results(company: str, section: str) -> str:
     all_results: list[str] = []
     for query in queries:
         results = await search(query)
-        all_results.extend(results)
+        for r in results:
+            content = r.get("content", "")
+            if content:
+                all_results.append(content)
 
     return "\n\n---\n\n".join(all_results)
 
