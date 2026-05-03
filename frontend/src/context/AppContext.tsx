@@ -14,7 +14,7 @@ type Action =
   | { type: 'CLEAR_STATUS' }
   | { type: 'RESET' };
 
-const initialState: AppState = {
+export const initialState: AppState = {
   status: 'idle',
   currentReport: null,
   streamingSections: {},
@@ -23,7 +23,7 @@ const initialState: AppState = {
   statusMessage: '',
 };
 
-function appReducer(state: AppState, action: Action): AppState {
+export function appReducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case 'START_RESEARCH':
       return { ...state, status: 'streaming', currentReport: null, streamingSections: {}, error: null, statusMessage: '' };
