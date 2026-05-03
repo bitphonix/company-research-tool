@@ -48,9 +48,9 @@ Frontend runs at `http://localhost:5173`
 
 Create `backend/.env`:
 
-OPENAI_API_KEY=your_openai_api_key
-TAVILY_API_KEY=your_tavily_api_key
-DATABASE_URL=sqlite+aiosqlite:///./research.db
+- OPENAI_API_KEY=your_openai_api_key
+- TAVILY_API_KEY=your_tavily_api_key
+- DATABASE_URL=sqlite+aiosqlite:///./research.db
 
 Get API keys:
 - OpenAI: https://platform.openai.com/api-keys
