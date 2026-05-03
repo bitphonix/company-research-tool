@@ -1,5 +1,6 @@
 import { useAppContext } from '../context/AppContext';
 import { useReports } from '../hooks/useReports';
+import { formatRelativeTime } from '../utils/time';
 
 export function ReportHistory() {
   const { state } = useAppContext();
@@ -30,7 +31,7 @@ export function ReportHistory() {
                   {report.company_name}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {new Date(report.created_at).toLocaleDateString()}
+                  {formatRelativeTime(report.created_at)}
                 </p>
               </div>
               <button

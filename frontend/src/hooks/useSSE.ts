@@ -3,8 +3,9 @@ import { useAppContext } from '../context/AppContext';
 import { fetchReport, fetchReports } from '../api/client';
 
 export function useSSE() {
-  const { dispatch } = useAppContext();
+  const { state, dispatch } = useAppContext();
   const eventSourceRef = useRef<EventSource | null>(null);
+  const activeCompanyRef = useRef<string | null>(null);
 
   const cleanup = () => {
     if (eventSourceRef.current) {
@@ -18,6 +19,12 @@ export function useSSE() {
   }, []);
 
   const startResearch = async (companyName: string) => {
+    const normalizedName = companyName.trim().toLowerCase();
+    if (state.status === 'streaming' && activeCompanyRef.current === normalizedName) {
+      return;
+    }
+    
+    activeCompanyRef.current = normalizedName;
     cleanup();
     dispatch({ type: 'START_RESEARCH' });
     dispatch({ type: 'SET_STATUS', payload: 'Connecting...' });
@@ -38,6 +45,7 @@ export function useSSE() {
           // ignore
         }
         dispatch({ type: 'RESEARCH_ERROR', payload: msg });
+        activeCompanyRef.current = null;
         return;
       }
 
@@ -90,6 +98,7 @@ export function useSSE() {
               payload: { section: parsedData.section, content: parsedData.content },
             });
           } else if (eventType === 'done') {
+            activeCompanyRef.current = null;
             const reportId = parsedData.report_id;
             const fullReport = await fetchReport(reportId);
             dispatch({ type: 'RESEARCH_DONE', payload: fullReport });
@@ -98,11 +107,13 @@ export function useSSE() {
             const history = await fetchReports();
             dispatch({ type: 'SET_HISTORY', payload: history });
           } else if (eventType === 'error') {
+            activeCompanyRef.current = null;
             dispatch({ type: 'RESEARCH_ERROR', payload: parsedData.message });
           }
         }
       }
     } catch (err: any) {
+      activeCompanyRef.current = null;
       dispatch({ type: 'RESEARCH_ERROR', payload: err.message || 'Network error' });
     }
   };
