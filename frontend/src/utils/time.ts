@@ -1,5 +1,8 @@
 export function formatRelativeTime(dateString: string): string {
-  const date = new Date(dateString);
+  const utcString = dateString.endsWith('Z') || dateString.includes('+') 
+  ? dateString
+  : dateString + 'Z';
+  const date = new Date(utcString);
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 

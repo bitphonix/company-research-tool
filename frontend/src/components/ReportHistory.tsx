@@ -8,41 +8,46 @@ export function ReportHistory() {
 
   if (state.history.length === 0) {
     return (
-      <div className="p-4 text-sm text-gray-500 italic">
-        No reports yet. Search for a company to begin.
+      <div className="px-8 py-10 text-sm text-black/40 text-center font-medium">
+        No briefings found.
       </div>
     );
   }
 
   return (
-    <div className="flex-1 overflow-y-auto">
-      <ul className="divide-y divide-gray-100">
+    <div className="pb-8">
+      <div className="px-8 mb-4">
+        <h3 className="text-[10px] font-bold text-black/30 tracking-widest uppercase">
+          Archive
+        </h3>
+      </div>
+      <ul className="flex flex-col gap-1 px-4">
         {state.history.map((report) => {
           const isSelected = state.currentReport?.id === report.id;
           
           return (
             <li 
               key={report.id} 
-              className={`p-3 cursor-pointer hover:bg-gray-50 flex justify-between items-center group transition-colors ${isSelected ? 'bg-primary-50 border-l-4 border-primary-500' : 'border-l-4 border-transparent'}`}
+              className={`px-4 py-3 cursor-pointer flex justify-between items-center group transition-all duration-300 ease-out rounded-xl ${isSelected ? 'bg-black/[0.03]' : 'hover:bg-black/[0.02]'}`}
               onClick={() => loadReport(report.id)}
             >
-              <div className="truncate pr-4">
-                <p className="text-sm font-medium text-gray-900 truncate">
+              <div className="truncate pr-4 flex flex-col gap-1 w-full">
+                <span className={`text-sm font-semibold truncate transition-colors duration-300 ${isSelected ? 'text-blue-600' : 'text-black group-hover:text-black/80'}`}>
                   {report.company_name}
-                </p>
-                <p className="text-xs text-gray-500">
+                </span>
+                <span className="text-[11px] text-black/40 font-mono">
                   {formatRelativeTime(report.created_at)}
-                </p>
+                </span>
               </div>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   removeReport(report.id);
                 }}
-                className="text-gray-400 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition-opacity rounded focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="text-black/30 hover:text-red-500 w-8 h-8 rounded-full flex items-center justify-center opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 ease-out hover:bg-red-50 focus:opacity-100 focus:translate-x-0 focus:outline-none shrink-0"
                 aria-label="Delete report"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18"></path><path d="M6 6l12 12"></path></svg>
               </button>
             </li>
           );

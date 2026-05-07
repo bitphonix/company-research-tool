@@ -1,14 +1,22 @@
 export function EmptyState() {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center text-center p-8 h-full bg-gray-50">
-      <div className="w-16 h-16 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center mb-6">
-        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+    <div className="flex-1 flex flex-col items-center justify-center relative overflow-hidden p-8">
+      {/* Decorative center radial gradient */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-600/5 blur-[100px] rounded-full pointer-events-none"></div>
+      
+      <div className="text-center max-w-2xl relative z-10 animate-slide-up">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-black/[0.03] border border-black/5 mb-8 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)]">
+          <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <h2 className="text-5xl md:text-7xl font-display font-semibold text-black tracking-tighter leading-[1.1] mb-6">
+          Intelligence,<br />Instantly.
+        </h2>
+        <p className="text-lg md:text-xl text-black/50 leading-relaxed max-w-lg mx-auto font-medium">
+          Enter a company name in the sidebar to generate a comprehensive, structured research briefing in under 2 minutes.
+        </p>
       </div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-2">Ready to research?</h2>
-      <p className="text-gray-500 max-w-md">
-        Enter a company name in the sidebar to generate a comprehensive sales briefing. 
-        It typically takes about 30 seconds to gather overview, key people, news, financials, and risks.
-      </p>
     </div>
   );
 }

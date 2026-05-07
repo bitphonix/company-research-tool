@@ -3,18 +3,20 @@ import { ReportHistory } from './ReportHistory';
 
 export function Sidebar() {
   return (
-    <div className="w-80 bg-white border-r border-gray-200 flex flex-col h-full shrink-0">
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
-        <h1 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary-600"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-          Company Intel
+    <aside className="w-[320px] h-full flex flex-col bg-white border-r border-black/5 shrink-0 z-10 relative shadow-[10px_0_30px_-15px_rgba(0,0,0,0.03)]">
+      <div className="p-8 pb-4">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse-scale"></div>
+          <span className="text-[10px] font-bold text-black/40 tracking-[0.2em] uppercase">Vanguard Intel</span>
+        </div>
+        <h1 className="text-2xl font-display font-semibold text-black tracking-tight leading-none">
+          Briefings
         </h1>
       </div>
       <SearchBox />
-      <div className="p-3 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-        Recent Briefings
+      <div className="flex-1 overflow-y-auto mt-4">
+        <ReportHistory />
       </div>
-      <ReportHistory />
-    </div>
+    </aside>
   );
 }

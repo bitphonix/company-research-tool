@@ -6,6 +6,7 @@ A sales intelligence tool that generates structured company briefings for Accoun
 
 - **Backend:** FastAPI (Python), SQLite + SQLAlchemy + Alembic
 - **Frontend:** React + TypeScript + Tailwind CSS (Vite)
+- **UI/UX:** Agency-grade, premium design with Double-Bezel architecture, fluid CSS animations, and high-end typography (Outfit, Plus Jakarta Sans)
 - **LLM:** GPT-4.1 (OpenAI) — chosen for reliable structured output and fast tool-calling
 - **Search:** Tavily — chosen for agent-native design, pre-processed results, and free tier
 
@@ -70,20 +71,25 @@ cd frontend
 npm run test
 ```
 
+## Nice-to-Haves Implemented
+
+All nice-to-haves from the spec were completed:
+- Visual indicator of which section is currently streaming
+- Responsive layout
+- Relative timestamps ("3 minutes ago")
+- Cmd/Ctrl+K keyboard shortcut to focus search
+- Prevent duplicate concurrent research for the same company
+- Cancel in-progress research (frontend AbortController + backend disconnect detection)
+
 ## Trade-offs
 
 - **Key people accuracy:** The agent may surface executives who have since left the company. Tavily search results reflect what's indexed, not necessarily current org charts. A production version would cross-reference LinkedIn or a people data API.
 - **Gibberish input:** Invalid company names return a best-effort response rather than a hard error. The LLM handles this gracefully but may hallucinate data. A production version would add a company validation step before running the full agent.
 - **SSE via fetch:** Standard `EventSource` doesn't support POST requests, so the frontend uses `fetch` with a `ReadableStream` reader. This achieves the same result but loses automatic reconnection. Acceptable for a POC.
 - **Alembic URL hardcoded:** `alembic.ini` has a hardcoded SQLite URL. In production this would be driven by the environment variable.
-- **No request cancellation on backend:** Cancelling a stream on the frontend closes the connection but the backend agent continues running until complete. A production version would use background task cancellation.
 
 ## What I'd Do Differently With More Time
 
 - Add company validation before running the full agent pipeline
-- Implement request cancellation on the backend using asyncio task management
-- Add relative timestamps ("3 minutes ago") to report history
-- Add Cmd/Ctrl+K keyboard shortcut to focus search
-- Prevent duplicate concurrent research for the same company
 - Move all environment config to pydantic-settings for type-safe configuration
 - Add structured logging with request IDs for traceability

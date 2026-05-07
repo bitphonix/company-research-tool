@@ -1,6 +1,6 @@
 import json
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,16 +13,17 @@ router = APIRouter()
 
 @router.post("/research")
 async def start_research(
-    request: ResearchRequest,
+    payload: ResearchRequest,
+    request: Request,
     session: AsyncSession = Depends(get_session),
 ) -> StreamingResponse:
-    company_name = request.company_name
+    company_name = payload.company_name
 
     if not company_name:
         raise HTTPException(status_code=400, detail="Company name must not be empty")
 
     return StreamingResponse(
-        run_research_stream(company_name, session),
+        run_research_stream(company_name, session, request),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

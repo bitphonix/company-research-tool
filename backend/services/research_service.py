@@ -1,6 +1,7 @@
 import json
 from collections.abc import AsyncGenerator
 
+from fastapi import Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from agent.agent import stream_research
@@ -14,10 +15,14 @@ def _sse_line(event: str, data: object) -> str:
 async def run_research_stream(
     company_name: str,
     session: AsyncSession,
+    request: Request,
 ) -> AsyncGenerator[str, None]:
     collected_sections: dict[str, str] = {}
 
     async for event in stream_research(company_name):
+        if await request.is_disconnected():
+            return
+
         event_type = event["event"]
         event_data = event["data"]
 
@@ -31,6 +36,9 @@ async def run_research_stream(
 
         if event_type == "error":
             return
+
+    if await request.is_disconnected():
+        return
 
     try:
         report = await save_report(session, company_name, collected_sections)

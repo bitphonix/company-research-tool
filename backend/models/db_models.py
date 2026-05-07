@@ -18,7 +18,7 @@ class Report(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
 
     sections: Mapped[List["ReportSection"]] = relationship(
