@@ -49,7 +49,7 @@ Every report is auto-saved and accessible from the history sidebar.
 ### 1. Clone and set up environment variables
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/company-research-tool.git
+git clone https://github.com/bitphonix/company-research-tool.git
 cd company-research-tool
 ```
 
@@ -60,8 +60,6 @@ OPENAI_API_KEY=your_openai_api_key_here
 TAVILY_API_KEY=your_tavily_api_key_here
 DATABASE_URL=sqlite+aiosqlite:///./research.db
 ```
-
-> ⚠️ Never commit `.env`. It is in `.gitignore`.
 
 ### 2. Start the backend
 
@@ -254,9 +252,7 @@ Sections stream in order: overview → key_people → news → financials → ri
 
 ---
 
-## Nice-to-Haves — All Implemented
-
-Every nice-to-have from the spec was completed:
+## Additional Features Implemented
 
 - ✅ **Visual streaming indicator** — active section highlighted blue with pulsing dot, pending sections dimmed
 - ✅ **Responsive layout** — adapts from mobile to widescreen
