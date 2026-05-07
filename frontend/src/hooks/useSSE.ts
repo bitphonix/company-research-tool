@@ -3,7 +3,7 @@ import { useAppContext } from '../context/AppContext';
 import { fetchReport, fetchReports } from '../api/client';
 
 export function useSSE() {
-  const { state, dispatch } = useAppContext();
+  const { dispatch } = useAppContext();
   const eventSourceRef = useRef<EventSource | null>(null);
   const activeCompanyRef = useRef<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -34,10 +34,12 @@ export function useSSE() {
 
   const startResearch = async (companyName: string) => {
     const normalizedName = companyName.trim().toLowerCase();
+
+    // FIX 1: check only the ref, not state (state is async, ref is sync)
     if (activeCompanyRef.current === normalizedName) {
       return;
     }
-    
+
     activeCompanyRef.current = normalizedName;
     cleanup();
     dispatch({ type: 'START_RESEARCH' });
@@ -80,15 +82,15 @@ export function useSSE() {
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n\n');
-        
-        buffer = lines.pop() || ''; // Keep the last incomplete part in the buffer
+
+        buffer = lines.pop() || '';
 
         for (const block of lines) {
           if (!block.trim()) continue;
-          
+
           let eventType = 'message';
           let data = '';
-          
+
           for (const line of block.split('\n')) {
             if (line.startsWith('event: ')) {
               eventType = line.substring(7).trim();
@@ -115,23 +117,18 @@ export function useSSE() {
             });
           } else if (eventType === 'done') {
             abortControllerRef.current = null;
-            activeCompanyRef.current = null;
             const reportId = parsedData.report_id;
             const fullReport = await fetchReport(reportId);
             dispatch({ type: 'RESEARCH_DONE', payload: fullReport });
-            
-            // Refresh history
             const history = await fetchReports();
             dispatch({ type: 'SET_HISTORY', payload: history });
           } else if (eventType === 'error') {
             abortControllerRef.current = null;
-            activeCompanyRef.current = null;
             dispatch({ type: 'RESEARCH_ERROR', payload: parsedData.message });
           }
         }
       }
     } catch (err: any) {
-      activeCompanyRef.current = null;
       if (err.name === 'AbortError') {
         dispatch({ type: 'RESET' });
       } else {

@@ -6,19 +6,44 @@ interface SectionCardProps {
   sectionKey: keyof ReportSections;
   content: any;
   isLoading?: boolean;
+  isActive?: boolean;
 }
 
-export function SectionCard({ title, sectionKey, content, isLoading }: SectionCardProps) {
-  if (isLoading) {
+export function SectionCard({ title, sectionKey, content, isLoading, isActive }: SectionCardProps) {
+  // Active state — this section is currently being researched
+  if (isLoading && isActive) {
     return (
-      <div className="double-bezel mb-8 animate-slide-up">
-        <div className="double-bezel-inner p-8">
-          <h3 className="font-display text-xl font-semibold text-black mb-6">{title}</h3>
-          <div className="space-y-4">
-            <div className="h-4 skeleton-shimmer rounded-full w-full"></div>
-            <div className="h-4 skeleton-shimmer rounded-full w-5/6"></div>
-            <div className="h-4 skeleton-shimmer rounded-full w-4/6"></div>
+      <div className="bg-white border border-black/5 border-l-[3px] border-l-blue-600 rounded-r-lg mb-8 overflow-hidden shadow-[0_4px_20px_-8px_rgba(37,99,235,0.15)]">
+        <div className="px-6 py-4 border-b border-black/5 flex items-center justify-between">
+          <h3 className="font-display text-lg text-black">{title}</h3>
+          <div className="flex items-center gap-2">
+            <div className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+            </div>
+            <span className="text-xs font-mono text-blue-600 font-medium">Researching...</span>
           </div>
+        </div>
+        <div className="p-6">
+          <div className="animate-shimmer h-4 rounded w-3/4 mb-3"></div>
+          <div className="animate-shimmer h-4 rounded w-1/2 mb-3"></div>
+          <div className="animate-shimmer h-4 rounded w-2/3"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Waiting state — queued, not yet started
+  if (isLoading && !isActive) {
+    return (
+      <div className="bg-white border border-black/5 border-l-[3px] border-l-black/10 rounded-r-lg mb-8 overflow-hidden opacity-40">
+        <div className="px-6 py-4 border-b border-black/5 flex items-center justify-between">
+          <h3 className="font-display text-lg text-black/50">{title}</h3>
+          <span className="text-xs font-mono text-black/30">Pending</span>
+        </div>
+        <div className="p-6">
+          <div className="h-4 bg-black/5 rounded w-3/4 mb-3"></div>
+          <div className="h-4 bg-black/5 rounded w-1/2"></div>
         </div>
       </div>
     );
@@ -30,28 +55,21 @@ export function SectionCard({ title, sectionKey, content, isLoading }: SectionCa
 
   if (sectionKey === 'overview') {
     renderedContent = (
-      <p className="text-black/70 text-base leading-relaxed max-w-[65ch]">
+      <p className="text-[#1A1A1A] text-[15px] leading-relaxed">
         {content as string}
       </p>
     );
   } else if (sectionKey === 'key_people') {
     const people = content as Person[];
     if (people.length === 0) {
-      renderedContent = <p className="text-black/40 italic text-sm">No key people identified.</p>;
+      renderedContent = <p className="text-black/40 text-sm italic">No key people identified.</p>;
     } else {
       renderedContent = (
-        <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {people.map((p, i) => (
-            <li key={i} className="flex items-center gap-4 bg-black/[0.02] p-4 rounded-2xl border border-black/5 hover:-translate-y-0.5 transition-transform duration-500 ease-out">
-              <div className="w-10 h-10 rounded-full bg-black/5 flex items-center justify-center shrink-0">
-                <span className="text-black/50 font-display font-semibold text-sm">
-                  {p.name.charAt(0)}
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <span className="font-semibold text-black text-sm">{p.name}</span>
-                <span className="text-xs text-black/50 font-mono mt-0.5">{p.title}</span>
-              </div>
+            <li key={i} className="flex flex-col bg-black/[0.02] p-4 rounded-lg border border-black/5">
+              <span className="font-medium text-black text-sm">{p.name}</span>
+              <span className="text-xs text-black/40 font-mono mt-1">{p.title}</span>
             </li>
           ))}
         </ul>
@@ -59,35 +77,41 @@ export function SectionCard({ title, sectionKey, content, isLoading }: SectionCa
     }
   } else if (sectionKey === 'financials') {
     const fin = content as Financials;
-    const formatFin = (val: string | null) => val || <span className="text-black/30 italic">Unknown</span>;
+    const formatFin = (val: string | null) =>
+      val || <span className="text-black/30 italic text-base">Unknown</span>;
     renderedContent = (
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: 'Revenue', val: fin.revenue, highlight: false },
-          { label: 'Employees', val: fin.employee_count, highlight: false },
-          { label: 'Market Cap', val: fin.market_cap, highlight: false },
-          { label: 'Growth (YoY)', val: fin.yoy_growth, highlight: true }
-        ].map((stat, i) => (
-          <div key={i} className="flex flex-col p-5 bg-black/[0.02] rounded-2xl border border-black/5">
-            <span className="text-[10px] text-black/40 uppercase tracking-[0.15em] font-medium mb-2">{stat.label}</span>
-            <span className={`font-mono font-medium text-lg ${stat.highlight && stat.val ? 'text-blue-600' : 'text-black'}`}>
-              {formatFin(stat.val)}
-            </span>
-          </div>
-        ))}
+      <div className="grid grid-cols-2 gap-6">
+        <div className="flex flex-col">
+          <span className="text-[10px] text-black/40 uppercase tracking-widest font-mono mb-1">Revenue</span>
+          <span className="font-mono font-medium text-xl text-black">{formatFin(fin.revenue)}</span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-[10px] text-black/40 uppercase tracking-widest font-mono mb-1">Employees</span>
+          <span className="font-mono font-medium text-xl text-black">{formatFin(fin.employee_count)}</span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-[10px] text-black/40 uppercase tracking-widest font-mono mb-1">Market Cap</span>
+          <span className="font-mono font-medium text-xl text-black">{formatFin(fin.market_cap)}</span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-[10px] text-black/40 uppercase tracking-widest font-mono mb-1">Growth (YoY)</span>
+          <span className="font-mono font-medium text-xl text-green-600">{formatFin(fin.yoy_growth)}</span>
+        </div>
       </div>
     );
   } else if (sectionKey === 'news' || sectionKey === 'risks') {
     const items = content as string[];
     if (items.length === 0) {
-      renderedContent = <p className="text-black/40 italic text-sm">No specific {sectionKey} identified.</p>;
+      renderedContent = (
+        <p className="text-black/40 text-sm italic">No specific {sectionKey} identified.</p>
+      );
     } else {
       renderedContent = (
-        <ul className="space-y-4">
+        <ul className="space-y-3">
           {items.map((item, i) => (
-            <li key={i} className="flex items-start gap-4 group">
-              <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-black/20 group-hover:bg-blue-600 transition-colors duration-300 shrink-0"></span>
-              <span className="text-black/70 text-base leading-relaxed max-w-[65ch] group-hover:text-black transition-colors duration-300">{item}</span>
+            <li key={i} className="flex items-start gap-3">
+              <span className="text-blue-600 mt-1 text-xs shrink-0">●</span>
+              <span className="text-black/80 text-sm leading-relaxed">{item}</span>
             </li>
           ))}
         </ul>
@@ -96,11 +120,11 @@ export function SectionCard({ title, sectionKey, content, isLoading }: SectionCa
   }
 
   return (
-    <div className="double-bezel mb-8 animate-slide-up group">
-      <div className="double-bezel-inner p-8 transition-colors duration-500 group-hover:bg-white/80">
-        <h3 className="font-display text-2xl font-semibold text-black tracking-tight mb-6">{title}</h3>
-        <div>{renderedContent}</div>
+    <div className="bg-white border border-black/5 border-l-[3px] border-l-black rounded-r-lg mb-8 overflow-hidden animate-slide-up">
+      <div className="px-6 py-4 border-b border-black/5">
+        <h3 className="font-display text-lg text-black">{title}</h3>
       </div>
+      <div className="p-6">{renderedContent}</div>
     </div>
   );
 }
