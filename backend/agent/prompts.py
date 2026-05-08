@@ -105,22 +105,22 @@ Search results:
 SEARCH_QUERIES = {
     "overview": [
         "{company} company overview what does it do",
-        "{company} business model products services 2024 2025",
+        "{company} business model products services 2025 2026",
     ],
     "key_people": [
         "{company} CEO CTO CFO leadership team executives",
-        "{company} management team founders 2024 2025",
+        "{company} management team founders 2026",
     ],
     "news": [
-        "{company} latest news 2025",
-        "{company} announcements funding acquisition product launch 2024 2025",
+        "{company} latest news 2025 2026",
+        "{company} announcements funding acquisition product launch 2025 2026",
     ],
     "financials": [
-        "{company} revenue ARR annual recurring revenue employees 2024 2025",
-        "{company} valuation funding financial results growth 2024 2025",
+        "{company} revenue ARR annual recurring revenue employees 2026",
+        "{company} valuation funding financial results growth 2026",
     ],
     "risks": [
-        "{company} risks challenges regulatory competition problems 2024 2025",
-        "{company} lawsuits layoffs controversies headwinds 2024 2025",
+        "{company} risks challenges regulatory competition problems 2026",
+        "{company} lawsuits layoffs controversies headwinds 2026",
     ],
 }
