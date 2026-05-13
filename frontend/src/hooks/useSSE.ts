@@ -1,12 +1,92 @@
 import { useEffect, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import { useAppContext } from '../context/AppContext';
 import { fetchReport, fetchReports } from '../api/client';
+import type { ReportSections } from '../types';
+
+const SECTION_TRANSITION_DELAY_MS = 700;
+type SectionReveal = {
+  section: keyof ReportSections;
+  content: ReportSections[keyof ReportSections];
+};
+
+type StreamPayload = {
+  message?: string;
+  section?: keyof ReportSections;
+  content?: ReportSections[keyof ReportSections];
+  report_id?: number;
+};
 
 export function useSSE() {
-  const { dispatch } = useAppContext();
+  const { state, dispatch } = useAppContext();
   const eventSourceRef = useRef<EventSource | null>(null);
   const activeCompanyRef = useRef<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const streamRunRef = useRef(0);
+  const sectionQueueRef = useRef<SectionReveal[]>([]);
+  const sectionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const queueDrainResolversRef = useRef<Array<() => void>>([]);
+
+  const resolveQueueDrain = () => {
+    const resolvers = queueDrainResolversRef.current;
+    queueDrainResolversRef.current = [];
+    resolvers.forEach((resolve) => resolve());
+  };
+
+  const revealNextQueuedSection = () => {
+    const nextSection = sectionQueueRef.current.shift();
+
+    if (!nextSection) {
+      resolveQueueDrain();
+      return;
+    }
+
+    flushSync(() => {
+      dispatch({
+        type: 'SECTION_RECEIVED',
+        payload: nextSection,
+      });
+    });
+
+    sectionTimerRef.current = setTimeout(() => {
+      sectionTimerRef.current = null;
+
+      if (sectionQueueRef.current.length > 0) {
+        revealNextQueuedSection();
+      } else {
+        resolveQueueDrain();
+      }
+    }, SECTION_TRANSITION_DELAY_MS);
+  };
+
+  const enqueueSectionReveal = (section: keyof ReportSections, content: ReportSections[keyof ReportSections]) => {
+    sectionQueueRef.current.push({ section, content });
+
+    if (!sectionTimerRef.current) {
+      revealNextQueuedSection();
+    }
+  };
+
+  const waitForSectionQueueToDrain = () => {
+    if (sectionQueueRef.current.length === 0 && !sectionTimerRef.current) {
+      return Promise.resolve();
+    }
+
+    return new Promise<void>((resolve) => {
+      queueDrainResolversRef.current.push(resolve);
+    });
+  };
+
+  const clearSectionQueue = () => {
+    sectionQueueRef.current = [];
+
+    if (sectionTimerRef.current) {
+      clearTimeout(sectionTimerRef.current);
+      sectionTimerRef.current = null;
+    }
+
+    resolveQueueDrain();
+  };
 
   const cleanup = () => {
     if (eventSourceRef.current) {
@@ -17,6 +97,7 @@ export function useSSE() {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
+    clearSectionQueue();
   };
 
   useEffect(() => {
@@ -24,6 +105,9 @@ export function useSSE() {
   }, []);
 
   const cancelResearch = () => {
+    streamRunRef.current += 1;
+    clearSectionQueue();
+
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
@@ -40,7 +124,20 @@ export function useSSE() {
       return;
     }
 
+    // DB-level guard: If the report exists in the database (loaded in history), 
+    // load it instead of regenerating.
+    const existing = state.history.find(
+      (r) => r.company_name.trim().toLowerCase() === normalizedName,
+    );
+    if (existing) {
+      const fullReport = await fetchReport(existing.id);
+      dispatch({ type: 'VIEW_REPORT', payload: fullReport });
+      return;
+    }
+
     activeCompanyRef.current = normalizedName;
+    const runId = streamRunRef.current + 1;
+    streamRunRef.current = runId;
     cleanup();
     dispatch({ type: 'START_RESEARCH' });
     dispatch({ type: 'SET_STATUS', payload: 'Connecting...' });
@@ -55,6 +152,8 @@ export function useSSE() {
       });
 
       if (!res.ok) {
+        if (streamRunRef.current !== runId) return;
+
         let msg = 'Failed to start research';
         try {
           const body = await res.json();
@@ -79,6 +178,7 @@ export function useSSE() {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
+        if (streamRunRef.current !== runId) return;
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n\n');
@@ -101,7 +201,7 @@ export function useSSE() {
 
           if (!data) continue;
 
-          let parsedData;
+          let parsedData: StreamPayload;
           try {
             parsedData = JSON.parse(data);
           } catch {
@@ -109,30 +209,38 @@ export function useSSE() {
           }
 
           if (eventType === 'status') {
-            dispatch({ type: 'SET_STATUS', payload: parsedData.message });
-          } else if (eventType === 'section') {
-            dispatch({
-              type: 'SECTION_RECEIVED',
-              payload: { section: parsedData.section, content: parsedData.content },
-            });
+            dispatch({ type: 'SET_STATUS', payload: parsedData.message ?? '' });
+          } else if (eventType === 'section' && parsedData.section) {
+            enqueueSectionReveal(parsedData.section, parsedData.content ?? null);
           } else if (eventType === 'done') {
             abortControllerRef.current = null;
             const reportId = parsedData.report_id;
+            if (!reportId) {
+              throw new Error('Research completed without a report id');
+            }
+            await waitForSectionQueueToDrain();
+            if (streamRunRef.current !== runId) return;
+
             const fullReport = await fetchReport(reportId);
             dispatch({ type: 'RESEARCH_DONE', payload: fullReport });
             const history = await fetchReports();
             dispatch({ type: 'SET_HISTORY', payload: history });
           } else if (eventType === 'error') {
+            if (streamRunRef.current !== runId) return;
+
             abortControllerRef.current = null;
-            dispatch({ type: 'RESEARCH_ERROR', payload: parsedData.message });
+            dispatch({ type: 'RESEARCH_ERROR', payload: parsedData.message ?? 'Research failed' });
           }
         }
       }
-    } catch (err: any) {
-      if (err.name === 'AbortError') {
+    } catch (err) {
+      if (streamRunRef.current !== runId) return;
+
+      if (err instanceof Error && err.name === 'AbortError') {
         dispatch({ type: 'RESET' });
       } else {
-        dispatch({ type: 'RESEARCH_ERROR', payload: err.message || 'Network error' });
+        const message = err instanceof Error ? err.message : 'Network error';
+        dispatch({ type: 'RESEARCH_ERROR', payload: message });
       }
     }
   };
